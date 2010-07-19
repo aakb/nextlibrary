@@ -1,0 +1,69 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: TinyMCE Node Picker\n"
+"POT-Creation-Date: 2010-01-25 06:55+0100\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Peter Törnstrand <peter@happiness.se>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Swedish\n"
+"X-Poedit-Country: SWEDEN\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: tinymce_node_picker.page.inc:17
+msgid "Enabled tabs"
+msgstr "Aktiverade tabbar"
+
+#: tinymce_node_picker.page.inc:20
+#: tinymce_node_picker.module:40
+msgid "Menu"
+msgstr "Meny"
+
+#: tinymce_node_picker.page.inc:21
+#: tinymce_node_picker.module:48
+msgid "Taxonomy"
+msgstr "Taxonomi"
+
+#: tinymce_node_picker.page.inc:23
+msgid "Select which tabs should be visible in the Node picker dialog."
+msgstr "Välj vilka tabbar som skall vara aktiverade i Node Picker-dialogen."
+
+#: tinymce_node_picker.module:16;26
+#: plugins/nodepicker.inc:14
+msgid "Node picker"
+msgstr "Node picker"
+
+#: tinymce_node_picker.module:17
+msgid "Settings for the Node picker module."
+msgstr "Inställningar för Node Picker-modulen."
+
+#: tinymce_node_picker.module:34
+msgid "Nodes"
+msgstr "Noders"
+
+#: tinymce_node_picker.info:0
+msgid "TinyMCE Node Picker"
+msgstr "TinyMCE Node Picker"
+
+#: tinymce_node_picker.info:0
+msgid "A node picker for the tinymce wysiwyg editor that inserts links into the editor."
+msgstr "En nodväljare för TinyMCE WYSIWYG-editorn för att skapa länkar."
+
+#: tinymce_node_picker.info:0
+msgid "User interface"
+msgstr "Användargränssnitt"
+
+#: js/dialog.js:0;0
+msgid "The link cannot be inserted because the parent window cannot be found."
+msgstr "Länken kan inte skapas då det öppnande fönstret inte kan hittas."
+
+#: plugins/nodepicker.inc:17
+msgid "Insert link to internal content"
+msgstr "Skapa länkar till internt innehåll"
+
+#: plugins/nodepicker.inc:20
+msgid "Test"
+msgstr "Test"
+

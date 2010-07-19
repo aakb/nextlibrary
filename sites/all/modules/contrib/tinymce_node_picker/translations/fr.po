@@ -1,0 +1,79 @@
+# $Id: fr.po,v 1.1 2010/01/25 06:03:09 blixxxa Exp $
+#
+# French translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  tinymce_node_picker.page.inc,v 1.8 2010/01/14 13:09:47 blixxxa
+#  tinymce_node_picker.module,v 1.16 2010/01/20 07:48:30 blixxxa
+#  nodepicker.inc,v 1.5 2010/01/15 12:27:39 blixxxa
+#  tinymce_node_picker.info,v 1.4 2009/11/27 13:24:55 blixxxa
+#  dialog.js,v 1.13 2010/01/20 07:48:30 blixxxa
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: french translation for drupal6 TinyMCE Node Picker module\n"
+"POT-Creation-Date: 2010-01-22 17:52+0100\n"
+"PO-Revision-Date: 2010-01-22 18:01+0100\n"
+"Last-Translator: Sylvain Moreau <sylvain.moreau@ows.fr>\n"
+"Language-Team: Sylvain Moreau, OWS <sylvain.moreau@ows.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+"X-Poedit-Language: French\n"
+
+#: tinymce_node_picker.page.inc:17
+msgid "Enabled tabs"
+msgstr "Onglets activés"
+
+#: tinymce_node_picker.page.inc:20
+#: tinymce_node_picker.module:40
+msgid "Menu"
+msgstr "Menu"
+
+#: tinymce_node_picker.page.inc:21
+#: tinymce_node_picker.module:48
+msgid "Taxonomy"
+msgstr "Taxonomie"
+
+#: tinymce_node_picker.page.inc:23
+msgid "Select which tabs should be visible in the Node picker dialog."
+msgstr "Sélectionnez quels onglets doivent être visibles dans la boîte de dialogue Node picker"
+
+#: tinymce_node_picker.module:16;26
+#: plugins/nodepicker.inc:14
+msgid "Node picker"
+msgstr "Node picker"
+
+#: tinymce_node_picker.module:17
+msgid "Settings for the Node picker module."
+msgstr "Paramètres du module Node picker"
+
+#: tinymce_node_picker.module:34
+msgid "Nodes"
+msgstr "Nœuds"
+
+#: tinymce_node_picker.info:0
+msgid "TinyMCE Node Picker"
+msgstr "TinyMCE Node Picker"
+
+#: tinymce_node_picker.info:0
+msgid "A node picker for the tinymce wysiwyg editor that inserts links into the editor."
+msgstr "Un sélecteur de noeud (<em>node picker</em>) pour l'éditeur wysiwyg tinymce, permettant d'insérer des liens dans le contenu de l'éditeur."
+
+#: tinymce_node_picker.info:0
+msgid "User interface"
+msgstr "Interface utilisateur"
+
+#: js/dialog.js:0;0
+msgid "The link cannot be inserted because the parent window cannot be found."
+msgstr "Le lien ne peut être inséré parce que la fenêtre parente ne peut être trouvée."
+
+#: plugins/nodepicker.inc:17
+msgid "Insert link to internal content"
+msgstr "Insérer un lien vers un contenu interne"
+
+#: plugins/nodepicker.inc:20
+msgid "Test"
+msgstr "Test"
+

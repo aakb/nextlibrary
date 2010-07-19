@@ -1,0 +1,547 @@
+<?php 
+// $Id: tinymce_node_picker.module,v 1.19 2010/02/16 08:24:18 blixxxa Exp $
+
+/**
+ * @file
+ * Implementation of hooks and callbacks for TinyMCE Node Picker module.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function tinymce_node_picker_menu() {
+  $items = array();
+  
+  $items['admin/settings/nodepicker'] = array(
+  	'title' => 'Node picker',
+  	'description' => 'Settings for the Node picker module.',
+  	'page callback' => 'drupal_get_form',
+    'page arguments' => array('tinymce_node_picker_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'tinymce_node_picker.page.inc',
+    'file path' => drupal_get_path('module', 'tinymce_node_picker'),
+  );
+  
+  $items['admin/tinymce-node-picker/%'] = array(
+    'title' => 'Node picker',
+    'page callback' => 'tinymce_node_picker_page_nodes',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'tinymce_node_picker.page.inc',
+  );
+  
+  $items['admin/tinymce-node-picker/%/nodes'] = array(
+    'title' => 'Nodes',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+
+  $items['admin/tinymce-node-picker/%/menu'] = array(
+    'title' => 'Menu',
+    'page callback' => 'tinymce_node_picker_page_menu',
+    'access arguments' => array('access content'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'tinymce_node_picker.page.inc',
+  );
+
+  $items['admin/tinymce-node-picker/%/taxonomy'] = array(
+    'title' => 'Taxonomy',
+    'page callback' => 'tinymce_node_picker_page_taxonomy',
+    'access arguments' => array('access content'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'tinymce_node_picker.page.inc',
+  );
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_menu_alter().
+ */
+function tinymce_node_picker_menu_alter(&$items) {
+	$tabs = variable_get('tinymce_node_picker_tabs', array('menu' => 'menu', 'taxonomy' => 'taxonomy'));
+  if(!$tabs['menu']) {
+  	//unset($items['admin/tinymce-node-picker/%/menu']);
+  }
+  if(!$tabs['taxonomy']) {
+  	//unset($items['admin/tinymce-node-picker/%/taxonomy']);
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function tinymce_node_picker_theme() {
+  $theme['tinymce_node_picker_page'] = array(
+    'template' => 'tinymce-node-picker-page',
+    'arguments' => array('content' => NULL, 'show_messages' => TRUE),
+  );
+
+  return $theme;
+}
+
+/**
+ * Template preprocess function for theme_tinymce_node_picker_page().
+ */
+function template_preprocess_tinymce_node_picker_page(&$variables) {
+  // Construct page title
+  $head_title = array(strip_tags(drupal_get_title()), variable_get('site_name', 'Drupal'));
+  $variables['head_title']  = implode(' | ', $head_title);
+  $variables['base_path'] = base_path();
+  $variables['front_page'] = url();
+  $variables['head'] = drupal_get_html_head();
+  $variables['help'] = theme('help');
+  $variables['language'] = $GLOBALS['language'];
+  $variables['language']->dir = $GLOBALS['language']->direction ? 'rtl' : 'ltr';
+  $variables['messages'] = $variables['show_messages'] ? theme('status_messages') : '';
+  $variables['site_name'] = (theme_get_setting('toggle_name') ? variable_get('site_name', 'Drupal') : '');
+  $variables['css'] = drupal_add_css();
+  $variables['styles'] = drupal_get_css();
+  $variables['scripts'] = drupal_get_js();
+  $variables['title'] = drupal_get_title();
+  $variables['closure'] = theme('closure');
+  
+  // Tabs, workaround for cache problem with local tasks.
+  $active_tabs = variable_get('tinymce_node_picker_tabs', array('menu' => 'menu', 'taxonomy' => 'taxonomy'));
+  
+  // Surpress E_WARNING messages from invalid markup.
+  libxml_use_internal_errors(TRUE);
+  
+  // Load markup.
+  $tabs = simplexml_load_string(theme('menu_local_tasks'));
+  if(!$active_tabs['menu']) {
+    unset($tabs->li[1]);
+  }
+  if(!$active_tabs['taxonomy']) {
+    unset($tabs->li[sizeof($tabs->li) - 1]);
+  }
+  if(sizeof($tabs->li) > 1) {
+    $variables['tabs'] = $tabs->asXML();  
+  }
+  
+  // Return to normal error handling.
+  libxml_use_internal_errors(FALSE);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function tinymce_node_picker_form_alter(&$form, $form_state, $form_id) {
+	// List of exposed forms to alter.
+	$forms = array(
+		'views-exposed-form-nodepicker-nodes-default',
+		'views-exposed-form-nodepicker-taxonomy-default',
+	);
+	
+	// Alter forms.
+	if($form_id == 'views_exposed_form' && in_array($form['#id'], $forms)) {
+		$form['q'] = array('#type' => 'hidden', '#value' => check_plain($_GET['q']));
+		$form['#action'] = '';
+	}
+}
+
+/**
+ * Implementation of hook_views_default_views().
+ */
+function tinymce_node_picker_views_default_views() {
+  $views = array();
+
+  // Exported view: nodepicker_nodes
+  $view = new view;
+  $view->name = 'nodepicker_nodes';
+  $view->description = '';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'node';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'title' => array(
+      'label' => 'Title',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'type' => array(
+      'label' => 'Type',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 0,
+      'exclude' => 0,
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+    'status' => array(
+      'label' => 'Published',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'type' => 'yes-no',
+      'not' => 0,
+      'exclude' => 0,
+      'id' => 'status',
+      'table' => 'node',
+      'field' => 'status',
+      'relationship' => 'none',
+    ),
+    'title_1' => array(
+      'label' => 'Action',
+      'alter' => array(
+        'alter_text' => 1,
+        'text' => 'Insert link',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'strip_tags' => 0,
+        'html' => 0,
+      ),
+      'link_to_node' => 1,
+      'exclude' => 0,
+      'id' => 'title_1',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('sorts', array(
+    'created' => array(
+      'order' => 'DESC',
+      'granularity' => 'second',
+      'id' => 'created',
+      'table' => 'node',
+      'field' => 'created',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'title' => array(
+      'operator' => 'contains',
+      'value' => '',
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'title_op',
+        'identifier' => 'title',
+        'label' => 'Title',
+        'optional' => 1,
+        'remember' => 0,
+      ),
+      'case' => 1,
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
+      'relationship' => 'none',
+    ),
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(),
+      'group' => '0',
+      'exposed' => TRUE,
+      'expose' => array(
+        'use_operator' => 0,
+        'operator' => 'type_op',
+        'identifier' => 'type',
+        'label' => 'Type',
+        'optional' => 1,
+        'single' => 1,
+        'remember' => 0,
+        'reduce' => 0,
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'role',
+    'role' => array(
+      '2' => 2,
+    ),
+  ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('title', 'Node picker nodes');
+  $handler->override_option('header_format', '2');
+  $handler->override_option('header_empty', 0);
+  $handler->override_option('empty', '<p>No Results.</p>');
+  $handler->override_option('empty_format', '2');
+  $handler->override_option('use_pager', '1');
+  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_options', array(
+    'grouping' => '',
+    'override' => 1,
+    'sticky' => 0,
+    'order' => 'asc',
+    'columns' => array(
+      'title' => 'title',
+      'type' => 'type',
+      'status' => 'status',
+      'changed' => 'changed',
+      'view_node' => 'view_node',
+    ),
+    'info' => array(
+      'title' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
+      'type' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
+      'status' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
+      'changed' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
+      'view_node' => array(
+        'separator' => '',
+      ),
+    ),
+    'default' => 'title',
+  ));
+
+  $views[$view->name] = $view;
+  
+  //  Exported view: nodepicker_taxonomy
+  $view = new view;
+	$view->name = 'nodepicker_taxonomy';
+	$view->description = '';
+	$view->tag = '';
+	$view->view_php = '';
+	$view->base_table = 'term_data';
+	$view->is_cacheable = FALSE;
+	$view->api_version = 2;
+	$view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+	$handler = $view->new_display('default', 'Defaults', 'default');
+	$handler->override_option('fields', array(
+	  'name' => array(
+	    'label' => 'Term',
+	    'alter' => array(
+	      'alter_text' => 0,
+	      'text' => '',
+	      'make_link' => 0,
+	      'path' => '',
+	      'link_class' => '',
+	      'alt' => '',
+	      'prefix' => '',
+	      'suffix' => '',
+	      'help' => '',
+	      'trim' => 0,
+	      'max_length' => '',
+	      'word_boundary' => 1,
+	      'ellipsis' => 1,
+	      'strip_tags' => 0,
+	      'html' => 0,
+	    ),
+	    'link_to_taxonomy' => 0,
+	    'exclude' => 0,
+	    'id' => 'name',
+	    'table' => 'term_data',
+	    'field' => 'name',
+	    'relationship' => 'none',
+	  ),
+	  'name_1' => array(
+	    'label' => 'Vocabulary',
+	    'alter' => array(
+	      'alter_text' => 0,
+	      'text' => '',
+	      'make_link' => 0,
+	      'path' => '',
+	      'link_class' => '',
+	      'alt' => '',
+	      'prefix' => '',
+	      'suffix' => '',
+	      'help' => '',
+	      'trim' => 0,
+	      'max_length' => '',
+	      'word_boundary' => 1,
+	      'ellipsis' => 1,
+	      'strip_tags' => 0,
+	      'html' => 0,
+	    ),
+	    'exclude' => 0,
+	    'id' => 'name_1',
+	    'table' => 'vocabulary',
+	    'field' => 'name',
+	    'relationship' => 'none',
+	  ),
+	  'name_2' => array(
+	    'label' => 'Action',
+	    'alter' => array(
+	      'alter_text' => 1,
+	      'text' => 'Insert link',
+	      'make_link' => 0,
+	      'path' => '',
+	      'link_class' => '',
+	      'alt' => '',
+	      'prefix' => '',
+	      'suffix' => '',
+	      'help' => '',
+	      'trim' => 0,
+	      'max_length' => '',
+	      'word_boundary' => 1,
+	      'ellipsis' => 1,
+	      'strip_tags' => 0,
+	      'html' => 0,
+	    ),
+	    'link_to_taxonomy' => 1,
+	    'exclude' => 0,
+	    'id' => 'name_2',
+	    'table' => 'term_data',
+	    'field' => 'name',
+	    'relationship' => 'none',
+	  ),
+	));
+	$handler->override_option('sorts', array(
+	  'name' => array(
+	    'order' => 'ASC',
+	    'id' => 'name',
+	    'table' => 'term_data',
+	    'field' => 'name',
+	    'relationship' => 'none',
+	  ),
+	));
+	$handler->override_option('filters', array(
+	  'vid' => array(
+	    'operator' => 'in',
+	    'value' => array(),
+	    'group' => '0',
+	    'exposed' => TRUE,
+	    'expose' => array(
+	      'use_operator' => 0,
+	      'operator' => 'vid_op',
+	      'identifier' => 'vid',
+	      'label' => 'Vocabulary',
+	      'optional' => 1,
+	      'single' => 1,
+	      'remember' => 0,
+	      'reduce' => 0,
+	    ),
+	    'id' => 'vid',
+	    'table' => 'term_data',
+	    'field' => 'vid',
+	    'relationship' => 'none',
+	  ),
+	));
+	$handler->override_option('access', array(
+	  'type' => 'none',
+	));
+	$handler->override_option('cache', array(
+	  'type' => 'none',
+	));
+	$handler->override_option('title', 'Node picker taxonomy');
+	$handler->override_option('use_pager', '1');
+	$handler->override_option('style_plugin', 'table');
+	$handler->override_option('style_options', array(
+	  'grouping' => '',
+	  'override' => 1,
+	  'sticky' => 0,
+	  'order' => 'asc',
+	  'columns' => array(
+	    'name' => 'name',
+	    'name_1' => 'name_1',
+	    'description' => 'description',
+	    'name_2' => 'name_2',
+	  ),
+	  'info' => array(
+	    'name' => array(
+	      'sortable' => 1,
+	      'separator' => '',
+	    ),
+	    'name_1' => array(
+	      'sortable' => 1,
+	      'separator' => '',
+	    ),
+	    'description' => array(
+	      'separator' => '',
+	    ),
+	    'name_2' => array(
+	      'sortable' => 0,
+	      'separator' => '',
+	    ),
+	  ),
+	  'default' => 'name',
+	));
+
+	
+	$views[$view->name] = $view;
+
+  return $views;
+}
+
+/**
+ * Implementation of hook_wysiwyg_include_directory().
+ */
+function tinymce_node_picker_wysiwyg_include_directory($type) {
+  switch ($type) {
+    case 'plugins':
+      return $type;
+  }
+}

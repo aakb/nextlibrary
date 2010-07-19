@@ -1,0 +1,16 @@
+; $Id: tinymce_node_picker.info,v 1.4 2009/11/27 13:24:55 blixxxa Exp $
+core = "6.x"
+package = "User interface"
+project = "tinymce_node_picker"
+name = "TinyMCE Node Picker"
+description = "A node picker for the tinymce wysiwyg editor that inserts links into the editor."
+features[views][] = "tinymce_linkpicker"
+dependencies[] = "views"
+dependencies[] = "wysiwyg"
+
+; Information added by drupal.org packaging script on 2010-02-17
+version = "6.x-2.1"
+core = "6.x"
+project = "tinymce_node_picker"
+datestamp = "1266395106"
+

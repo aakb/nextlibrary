@@ -1,0 +1,15 @@
+/* $Id: dialog.css,v 1.5 2010/02/17 08:19:15 blixxxa Exp $ */
+
+.nodepicker { padding: 10px; }
+
+div.admin-inline { display: none !important; }
+
+.views-exposed-form {
+	height: 1%;
+	overflow: hidden;
+}
+
+.views-exposed-widget {
+	float: left;
+	margin-right: 10px;
+}

@@ -1,0 +1,15 @@
+<?php
+// $Id: tinymce_node_picker.install,v 1.2 2010/01/15 08:31:58 blixxxa Exp $
+
+/**
+ * @file
+ * Install, update and uninstall functions for the TinyMCE Node Picker module.
+ */
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function tinymce_node_picker_uninstall() {  
+  // Delete module variables.
+  db_query("DELETE FROM {variable} WHERE name LIKE 'tinymce_node_picker%'");
+}

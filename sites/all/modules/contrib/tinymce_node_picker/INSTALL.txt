@@ -1,0 +1,50 @@
+$Id: INSTALL.txt,v 1.5 2010/01/15 08:32:59 blixxxa Exp $
+
+DRUPAL NODE PICKER PLUGIN FOR TINYMCE - Jonathan Yankovich
+
+// ------------------------------------------------------------
+// REQUIREMENTS
+
+* JavaScript-enabled web browser
+
+* Views module <http://drupal.org/project/views>
+
+* Wysiwyg module <http://drupal.org/project/wysiwyg>
+
+* TinyMCE editor for Wysiwig module <http://tinymce.moxiecode.com/download.php>
+
+// ------------------------------------------------------------
+// PRE-REQUISITES
+
+*	Install the required modules, above.
+  
+*	You can download the TinyMCE editor from the Site Configuration -> Wysiwyg
+
+*	You're going to want to install TinyMCE into sites/all/libraries, a new folder that you'll create.
+  
+*	If this is the first time you're installing TinyMCE, you'll have to set the profiles for the input
+	types (full html, filtered html) to TinyMCE so thee editor will be used when you edit content.
+	Wysiwyg's config screen will let you do this at admin/settings/wysiwyg
+    
+*	Test your editor to make sure TinyMCE is working before installing the plugin! You can do this at
+	node/add/story or node/add/page in a default Drupal installation.
+
+// ------------------------------------------------------------
+// INSTALLATION --
+
+*	Upload the TinyMCE Node Picker module to your modules directory. Usually sites/all/modules.
+
+*	Enable the module at Administer > Site building > Modules (admin/modules).
+
+* Enable the button by going to Administer > Site configuration > Wysiwyg and edit the profiles that use
+	TinyMCE. Enable "Node picker" under "Buttons and plugins" for each TinyMCE profile.
+
+*	Test the Node picker by creating a new, or updating an existing node that uses TinyMCE.
+
+// ------------------------------------------------------------
+// AUTHORS
+
+Created by Jonathan Yankovich http://tronathan.com http://bucketworks.org
+Co-maintained by Peter Törnstrand http://tornstrand.com http://happiness.se
+
+Sponsored by Bucketworks.org
