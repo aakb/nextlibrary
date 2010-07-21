@@ -1,0 +1,90 @@
+/* CSS: Brian Jensen @ www.magnify.dk */
+
+
+
+/*
+  Font, colors etc.
+*/
+
+/*
+  Default
+*/
+
+body {
+  color: #000;
+  font: 100%/150% Arial, Verdana, sans-serif;
+  padding: 20px;
+}
+
+a,
+a:link,
+a:visited {
+  color: #786aa6;
+  text-decoration: none;
+}
+
+a:hover,
+a:active {
+  color: #4d3d7f;
+}
+
+p, dl, hr, h1, h2, h3, h4, h5, h6, ol, ul, pre, table, address, fieldset {
+  margin-bottom: 10px;
+}
+
+/*
+  Generel elements
+*/
+
+#site-header,
+#site-subheader {
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+
+#site-header {
+  width: 200px;  
+}
+
+#site-subheader {
+  width: 740px;
+}
+
+#block-menu-primary-links {
+  font: 100%/675% Arial Black, Arial, Verdana, sans-serif;
+  letter-spacing: -1px;
+  height: 107px;
+  margin: 0;
+  text-transform: lowercase;
+}
+
+#block-menu-primary-links ul {
+  margin: 0;
+  padding: 0;
+}
+
+#block-menu-primary-links li {
+  background: url('../gfx/menu-sep.png') no-repeat right 3px;
+  display: inline;
+  list-style: none;
+  list-style-image: none;
+  list-style-type: none;
+  margin: 0;
+  padding: 0 25px 0 10px;
+}
+
+#block-menu-primary-links li.active-trail a {
+  color: #362c57;
+}
+
+#block-menu-primary-links li.last {
+  background: none;
+}
+
+h1#page-title {
+  color: #000;
+  font: 125% Arial, sans-serif;
+  font-weight: bold;
+  line-height: 150%;
+}
