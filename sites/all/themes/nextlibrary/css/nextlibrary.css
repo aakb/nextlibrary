@@ -103,9 +103,17 @@ h1#page-title {
   margin: 0 0 5px;
 }
 
-#comment-form {
+#comments {
+  border-top: 1px dashed #c1bfcd;
+  margin: 5px 0 0;
+}
+
+#comment-form-1 {
+  overflow: auto;
   width: 100%;
 }
+
+
 
 #comments h2,
 #comments .form-item a,
@@ -113,18 +121,29 @@ h1#page-title {
 #comments label,
 #comments .edit-comment,
 #comments fieldset.collapsible,
-#comments #edit-preview,
-#comments .wysiwyg-field-edit-comment,
+#comments #edit-preview-1,
+#comments .wysiwyg,
 #comments #comment-controls .container-inline,
 #comments #comment-controls .description {
   display: none;
 }
 
-#comments #edit-comment {
+#comments #comment-form-1 .resizable-textarea {
+  width: 99%;
+}
+
+#comments #edit-comment-1 {
   height: 75px;
 }
 
-#comments #edit-submit {
+#comments #edit-submit-1 {
+  clear: both;
   float: right;
-  margin: 0 40px 0 0;
+  margin: 0 3px 15px;
+}
+#comments .comment-folded {
+  border: 1px dashed #c1bfcd;
+  background-color: #d4d2de;
+  margin: 0 0 5px;
+  padding: 3px 5px;
 }

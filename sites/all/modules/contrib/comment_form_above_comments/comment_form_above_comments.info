@@ -1,0 +1,11 @@
+; $Id: comment_form_above_comments.info,v 1.1 2009/08/03 20:27:35 neochief Exp $
+name = Comment form above comments
+description = Adds option to place comment form above comments.
+package = Other
+core = 6.x
+; Information added by drupal.org packaging script on 2009-08-04
+version = "6.x-1.1"
+core = "6.x"
+project = "comment_form_above_comments"
+datestamp = "1249418136"
+

@@ -1,0 +1,16 @@
+<?php
+// $Id: comment_form_above_comments.install,v 1.1 2009/08/03 20:27:35 neochief Exp $
+
+/*
+ * @file
+ * Install comment_form_above_comments module.
+ */
+
+/*
+ * Implementation of hook_install(). We need to execute our module after
+ * others to prevent some glitches caused by $node->comment = NULL set in
+ * hook_preprocess_node().
+ */
+function comment_form_above_comments_install() {
+  db_query("UPDATE {system} SET weight = 100 WHERE name = 'comment_form_above_comments'");
+}

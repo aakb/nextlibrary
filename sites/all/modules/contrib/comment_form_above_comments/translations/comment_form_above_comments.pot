@@ -1,0 +1,32 @@
+# $Id: comment_form_above_comments.pot,v 1.1 2009/08/03 20:34:27 neochief Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  comment_form_above_comments.module: n/a
+#  comment_form_above_comments.info: n/a
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-08-03 23:28+0300\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: comment_form_above_comments.module:26
+msgid "Display below post, but before comments"
+msgstr ""
+
+#: comment_form_above_comments.info:0
+msgid "Comment form above comments"
+msgstr ""
+
+#: comment_form_above_comments.info:0
+msgid "Adds option to place comment form above comments."
+msgstr ""

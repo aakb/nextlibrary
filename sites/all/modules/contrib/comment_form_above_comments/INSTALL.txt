@@ -1,0 +1,25 @@
+1. Enable module.
+2. Go to your content type and set "Location of comment submission form" to "Display below post, but before comments".
+3. Check your node. If form present — celebrate, otherwise proceed to next step.
+4. Paste this code to your theme's template.php file:
+
+/**
+ * Allow themable wrapping of all comments.
+ */
+function phptemplate_comment_wrapper($content, $node) {
+  if (!$content || $node->type == 'forum') {
+    return '<div id="comments">'. $content .'</div>';
+  }
+  else {
+    return '<div id="comments"><h2 class="comments">'. t('Comments') .'</h2>'. $content .'</div>';
+  }
+}
+
+5. Clear Drupal's cache. Check your node. Celebrate.
+
+
+Caution: If your theme contains comment-wrapper.tpl.php file, do not perform step 4. Just add
+
+<?php print $form; ?>
+
+to this template in place where you want to see the form.

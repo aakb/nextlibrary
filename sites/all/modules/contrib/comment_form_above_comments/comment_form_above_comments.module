@@ -1,0 +1,89 @@
+<?php
+// $Id: comment_form_above_comments.module,v 1.1.2.1 2009/08/04 20:30:29 neochief Exp $
+
+/**
+ * @file
+ * Adds option to place comment form above comments.
+ */
+
+/**
+ * Comment form should be displayed on a separate page.
+ */
+define('COMMENT_FORM_ABOVE', 2);
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function comment_form_above_comments_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'node_type_form' && isset($form['identity']['type'])) {
+    $form['comment']['comment_form_location'] = array(
+      '#type' => 'radios',
+      '#title' => t('Location of comment submission form'),
+      '#default_value' => variable_get('comment_form_location_'. $form['#node_type']->type, COMMENT_FORM_SEPARATE_PAGE),
+      '#options' => array(
+        COMMENT_FORM_SEPARATE_PAGE => t('Display on separate page'),
+        COMMENT_FORM_BELOW => t('Display below post or comments'),
+        COMMENT_FORM_ABOVE => t('Display below post, but before comments'),
+      ),
+    );
+  }
+}
+
+/**
+ * Preprocessing node template.
+ */
+function comment_form_above_comments_preprocess_node(&$vars) {
+  $node = $vars['node'];
+
+  if (variable_get('comment_form_location_'. $node->type, COMMENT_FORM_SEPARATE_PAGE) == COMMENT_FORM_ABOVE) {
+    global $conf;
+    $conf['comment_form_location_true'] = $node->type;
+    $conf['comment_form_location_'. $node->type] = COMMENT_FORM_BELOW;
+  }
+}
+
+/**
+ * Preprocessing box template.
+ */
+function comment_form_above_comments_preprocess_box(&$vars) {
+  global $conf;
+  if (isset($conf['comment_form_location_true'])) {
+    $vars = array();
+    $conf['comment_form_location_'. $conf['comment_form_location_true']] = COMMENT_FORM_ABOVE;
+    unset($conf['comment_form_location_true']);
+  }
+}
+
+/**
+ * Add comment form on top of comments list and render it in template.
+ */
+function comment_form_above_comments_preprocess_comment_wrapper(&$variables) {
+  $variables['form'] = comment_form_box(array('nid' => $variables['node']->nid), t('Post new comment'));
+}
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ *
+ * We should onle override theme registry if comment_wrapper is being themed
+ * by function, othervise we can catch it in preprocess function.
+ */
+function comment_form_above_comments_theme_registry_alter(&$theme_registry) {
+  if (isset($theme_registry['comment_wrapper']['function']) && function_exists($theme_registry['comment_wrapper']['function'])) {
+    variable_set('comment_wrapper_function', $theme_registry['comment_wrapper']['function']);
+    $theme_registry['comment_wrapper']['function'] = 'comment_form_above_comments_comment_wrapper';
+  }
+}
+
+/**
+ * Add comment form on top of comments list and render everything with old theming function.
+ */
+function comment_form_above_comments_comment_wrapper($content, $node) {
+  $content = preg_replace('|<div class="box">\s*<div class="content">\s*</div>\s*</div>|', '', $content);
+
+  $output = comment_form_box(array('nid' => $node->nid), t('Post new comment'));
+  $comment_wrapper_function = variable_get('comment_wrapper_function', 'theme_comment_wrapper');
+  if (function_exists($comment_wrapper_function)) {
+    $output .= $comment_wrapper_function($content, $node);
+    return $output;
+  }
+}
