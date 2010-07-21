@@ -11,6 +11,7 @@
 */
 
 body {
+  background: #e1dfec url(../gfx/body-bg.gif) repeat-x;
   color: #000;
   font: 100%/150% Arial, Verdana, sans-serif;
   padding: 20px;
@@ -82,9 +83,45 @@ p, dl, hr, h1, h2, h3, h4, h5, h6, ol, ul, pre, table, address, fieldset {
   background: none;
 }
 
-h1#page-title {
+#main {
+}
+
+h1#page-title,
+#main-content .field-field-subtitle {
   color: #000;
   font: 125% Arial, sans-serif;
   font-weight: bold;
   line-height: 150%;
+}
+
+h1#page-title {
+  font-size: 150%;
+  margin: 0;
+}
+
+#main-content h3 {
+  margin: 0 0 5px;
+}
+
+#comment-form {
+  width: 100%;
+}
+
+#comments h2,
+#comments a,
+#comments label,
+#comments .edit-comment,
+#comments fieldset.collapsible,
+#comments #edit-preview,
+#comments .wysiwyg-field-edit-comment {
+  display: none;
+}
+
+#comments #edit-comment {
+  height: 75px;
+}
+
+#comments #edit-submit {
+  float: right;
+  margin: 0 40px 0 0;
 }
