@@ -108,12 +108,14 @@ h1#page-title {
 }
 
 #comments h2,
-#comments a,
+#comments .form-item a,
 #comments label,
 #comments .edit-comment,
 #comments fieldset.collapsible,
 #comments #edit-preview,
-#comments .wysiwyg-field-edit-comment {
+#comments .wysiwyg-field-edit-comment,
+#comments #comment-controls .container-inline,
+#comments #comment-controls .description {
   display: none;
 }
 
