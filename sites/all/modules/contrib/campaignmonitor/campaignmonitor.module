@@ -1,0 +1,571 @@
+<?php
+// $Id: campaignmonitor.module,v 1.7.2.25 2009/11/08 05:20:59 ssherriff Exp $
+
+/**
+ * @file
+ * Module that plugs in Campaign Monitor functionality to your Drupal web site.
+ * For Campaign Monitor information see: http://www.campaignmonitor.com/
+ *
+ * This module uses the CampaignMonitor PHP API. For all credit and information
+ * about this PHP API see By ssherriff: http://code.google.com/p/campaignmonitor-php/
+ */
+
+@require_once(drupal_get_path('module', 'campaignmonitor') .'/lib/CMBase.php');
+
+/* DRUPAL HOOKS */
+/* hook_help */
+function campaignmonitor_help($path, $arg) {
+  switch ($path) {
+    case 'admin/settings/campaignmonitor':
+      return '<p>'. t('Use your API key and other keys to have users register for a mailing list setup through Campaign Monitor.') .'</p>';
+  }
+}
+
+
+/* hook_perm */
+function campaignmonitor_perm() {
+  return array('administer campaignmonitor', 'access archive', 'join newsletter');
+}
+
+/* hook_menu */
+function campaignmonitor_menu() {
+  $items = array();
+  $items['admin/settings/campaignmonitor'] = array(
+    'title' => 'Campaign Monitor',
+    'description' => 'Setup Campaign Monitor values.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('campaignmonitor_admin'),
+    'access arguments' => array('administer campaignmonitor'),
+    'type' => MENU_NORMAL_ITEM);
+  $items['newsletter_archive'] = array(
+    'title' => 'Newsletter Archive',
+    'page callback' => 'campaignmonitor_newsletter_archive',
+    'access arguments' => array('access archive'),
+    'type' => MENU_SUGGESTED_ITEM);
+  $items['user/%user/newsletters'] = array(
+    'title' => 'My Newsletters',
+    'page callback' => 'campaignmonitor_user_page',
+    'access arguments' => array('join newsletter'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+  );
+  return $items;
+}
+
+/* hook_form_alter */
+function campaignmonitor_form_alter(&$form, $form_state, $form_id) {
+  $display_on = variable_get('campaignmonitor_display_on', array());
+  if (('contact_mail_page' == $form_id && $display_on['contact'] != '0') || ('user_register' == $form_id && $display_on['registration'] != '0') && user_access('join newsletter')) {
+    $form['subscribe_newsletter'] = array(
+      '#type'          => 'checkbox',
+      '#title'         => t(variable_get('campaignmonitor_checkboxdisplaytext', 'Join our Newsletter?')),
+      '#weight'        => 99,
+      '#default_value' => 0,
+    );
+    $form['submit']['#weight'] = 100;
+    $form['#submit'][] = '_campaignmonitor_form_submit';
+  }
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function campaignmonitor_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks[0] = array('info' => t('Join newsletter'));
+      return $blocks;
+    case 'configure':
+    case 'save':
+      // no additional configuration options
+      break;
+    case 'view':
+    default:
+      $block['subject'] = t('Join Newsletter');
+      $block['content'] = theme('campaignmonitor_block_content', $delta);
+      return $block;
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function campaignmonitor_theme() {
+  return array(
+    'campaignmonitor_block_content' => array(
+      'template' => 'campaignmonitor-block-content',
+    ),
+  );
+}
+
+/* END DRUPAL HOOKS */
+
+/* MODULE FUNCTIONS */
+
+function campaignmonitor_admin() {
+
+	$api_key = variable_get('campaignmonitor_api_key', '');
+	$client_id = variable_get('campaignmonitor_client_id', '');
+	$list_id = variable_get('campaignmonitor_list_id', '');
+
+	if ($api_key != '') {
+		// check if valid details
+		$valid = _campaignmonitor_check_details($api_key, $client_id, $list_id);
+		if (!$valid) {
+			drupal_set_message(t('Your Campaign Monitor details are not valid, please check them and try again.'), 'error');
+		}
+	}
+
+  $form['campaignmonitor_api_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('API Key'),
+    '#default_value' => $api_key,
+    '#required' => TRUE,
+    '#size' => 50,
+    '#maxlength' => 200,
+    '#description' => t('Your Campaign Monitor API Key. See <a href="http://www.campaignmonitor.com/api/required/">documentation</a>.')
+  );
+  $form['campaignmonitor_client_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Client ID'),
+    '#default_value' => $client_id,
+    '#required' => TRUE,
+    '#size' => 50,
+    '#maxlength' => 200,
+    '#description' => t('Your Campaign Monitor Client ID. See <a href="http://www.campaignmonitor.com/api/required/">documentation</a>.')
+  );
+  $form['campaignmonitor_list_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('List ID'),
+    '#default_value' => $list_id,
+    '#required' => TRUE,
+    '#size' => 50,
+    '#maxlength' => 200,
+    '#description' => t('Your Campaign Monitor List ID. See <a href="http://www.campaignmonitor.com/api/required/">documentation</a>.')
+  );
+	
+	$keyoptions = campaignmonitor_get_field_keys();
+      
+  $form['campaignmonitor_namekey'] = array(
+    '#type'           => 'select',
+    '#title'          => t('Name'),
+    '#options'        => $keyoptions,
+    '#default_value'  => variable_get('campaignmonitor_namekey', ''),
+		'#description'    => t('Select what you wish to populate the name field with by default.'),
+  );
+	
+	$form['campaignmonitor_block_options'] = array(
+  	'#type' => 'checkboxes',
+  	'#title' => 'Block Options',
+  	'#default_value' => variable_get('campaignmonitor_block_options', array()),
+  	'#options' => array(
+  	  'unsubscribe' => t('Hide the unsubscribe option?'),
+  	  'name_hide' => t('Hide the name field?'),
+			'name_required' => t('Make the name field required? (Will be ignored if name field is hidden)'),
+  	),
+  	'#description' => t("These options will affect how the Campaign Monitor block will display and function."),
+  );
+	
+  $form['campaignmonitor_display_on'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Display on Options'),
+    '#default_value' => variable_get('campaignmonitor_display_on', array()),
+    '#options' => array(
+      'contact' => t('Contact Page'),
+      'registration' => t('Registration Page')
+    ),
+    '#description' => t('Choose which forms you want to display the Join Newsletter checkbox.')
+  );
+  $form['campaignmonitor_checkboxdisplaytext'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Display Text for Checkbox'),
+    '#default_value' => variable_get('campaignmonitor_checkboxdisplaytext', 'Join our Newsletter?'),
+    '#description' => t("This text will display next to the checkbox on the selected forms.")
+  );
+  $form['campaignmonitor_userpagedisplaytext'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Display Text for User Page'),
+    '#default_value' => variable_get('campaignmonitor_userpagedisplaytext', 'Newsletter'),
+    '#description' => t("This text will display next to the checkbox on the user profile page.")
+  );
+  $form['campaignmonitor_pastcampaignurl'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Past Campaign URL'),
+    '#default_value' => variable_get('campaignmonitor_pastcampaignurl', ''),
+    '#size' => 100,
+    '#maxlength' => 100,
+    '#description' => t('This is required if you want to use the page that displays past campaigns. You can find this value if you go to Manage Clients, click on the client, go to the link that tells you how to display past campaigns, then copy the URL ONLY from the html given. The URL is in between the src="" value.')
+  );
+  $form['campaignmonitor_connection_timeout'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Connection timeout'),
+    '#default_value' => variable_get('campaignmonitor_connection_timeout', 15),
+    '#size' => 10,
+    '#maxlength' => 10,
+    '#description' => t("If your server can't get through to the API, or the API server is down, this is the amount of time until the connection times out in seconds. Default is 15 seconds.")
+  );
+  return system_settings_form($form);
+}
+
+function campaignmonitor_general_form() {
+  global $user;
+  $name = '';
+  $email = '';
+  $default = FALSE;
+  
+	// try to get name from default key values
+  $account = campaignmonitor_get_field_key_values($user->uid);
+  $name = $account[variable_get('campaignmonitor_namekey', '')];
+	
+  if ($user->uid != 0) {
+    $email = $user->mail;
+    if (_campaignmonitor_is_subscribed(variable_get('campaignmonitor_api_key', ''),
+      variable_get('campaignmonitor_list_id', '') , $email)) {
+      $default = TRUE;
+      // Also if subscribed get name
+      $subscriber = _campaignmonitor_get_subscriber(variable_get('campaignmonitor_api_key', ''),
+        variable_get('campaignmonitor_list_id', ''), $email);
+      $name = $subscriber['name'];
+    }
+    else {
+      $default = FALSE;
+    }
+  }
+  $block_options = variable_get('campaignmonitor_block_options', '');
+  if (!$block_options['name_hide']) {
+		$required = FALSE;
+		if($block_options['name_required']) {
+			$required = TRUE;
+		}
+    $form['name'] = array(
+      '#type'          => 'textfield',
+      '#title'         => t('Name'),
+      '#size'          => 20,
+      '#maxlength'     => 50,
+      '#required'      => $required,
+      '#default_value' => $name,
+    );
+  }
+  $form['email'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Email'),
+    '#size'          => 20,
+    '#maxlength'     => 100,
+    '#required'      => TRUE,
+    '#default_value' => $email,
+  );
+  if (!$block_options['unsubscribe']) {
+    $form['unsubscribe_newsletter'] = array(
+      '#type'          => 'checkbox',
+      '#title'         => t('Unsubscribe'),
+      '#default_value' => $default,
+    );
+  }
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
+  return $form;
+}
+
+function campaignmonitor_general_form_submit($form, &$form_state) {
+  // Replace api_key and list_id with your own details
+  $api_key = variable_get('campaignmonitor_api_key', '');
+  $list_id = variable_get('campaignmonitor_list_id', '');
+  $name = $form_state['values']['name'];
+  $email = $form_state['values']['email'];
+  // any cases other then these are when things are unchanged
+  if (!$form_state['values']['unsubscribe_newsletter']) {
+    // this is the case where they now want to be subscribed, and weren't before
+    _campaignmonitor_add_subscriber($api_key, $list_id, $name, $email);
+  }
+  else if ($form_state['values']['unsubscribe_newsletter']) {
+    // this is the case where they don't want to be subscribed, and were before
+    _campaignmonitor_remove_subscriber($api_key, $list_id, $email);
+  }
+}
+
+function campaignmonitor_newsletter_archive() {
+  $url = variable_get('campaignmonitor_pastcampaignurl', '');
+  if ($url == '') {
+    $content = '<p>The past campaign URL has not been set. Please set this in the administration pages.</p>';
+  }
+  else{
+    $content = '<script type="text/javascript" src="'. variable_get('campaignmonitor_pastcampaignurl', '') .'"></script>';
+  }
+  return $content;
+}
+
+function campaignmonitor_user_page() {
+  return drupal_get_form('campaignmonitor_user_form');
+}
+
+function campaignmonitor_user_form() {
+  global $user;
+  // Replace api_key and list_id with your own details
+  $api_key = variable_get('campaignmonitor_api_key', '');
+  $list_id = variable_get('campaignmonitor_list_id', '');
+  $email = $user->mail;
+  if (_campaignmonitor_is_subscribed($api_key, $list_id, $email, TRUE)) {
+    $default = TRUE;
+  }
+  else {
+    $default = FALSE;
+  }
+  $form['subscribe_newsletter'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => variable_get('campaignmonitor_userpagedisplaytext', 'Newsletter'),
+    '#default_value' => $default,
+  );
+  $form['is_subscribed'] = array(
+    '#type'          => 'hidden',
+    '#default_value' => $default,
+  );
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  return $form;
+}
+
+function campaignmonitor_user_form_submit($form, &$form_state)  {
+  global $user;
+	$uid = $user->uid;
+  // try to get name from default key values
+  $account = campaignmonitor_get_field_key_values($uid);
+  $name = $account[variable_get('campaignmonitor_namekey', '')];
+	
+  // Replace api_key and list_id with your own details
+  $api_key = variable_get('campaignmonitor_api_key', '');
+  $list_id = variable_get('campaignmonitor_list_id', '');
+  $name = $profile_name;
+  $email = $user->mail;
+  // any cases other then these are when things are unchanged
+  if ($form_state['values']['subscribe_newsletter'] && !$form_state['values']['is_subscribed']) {
+    // this is the case where they now want to be subscribed, and weren't before
+    _campaignmonitor_add_subscriber($api_key, $list_id, $name, $email);
+  }
+  else if (!$form_state['values']['subscribe_newsletter'] && $form_state['values']['is_subscribed']) {
+    // this is the case where they don't want to be subscribed, and were before
+    _campaignmonitor_remove_subscriber($api_key, $list_id, $email);
+  }
+}
+
+function _campaignmonitor_form_submit($form, &$form_state) {
+  if ($form_state['values']['subscribe_newsletter']) {
+    if ('contact_mail_page' == $form_id) {
+      $form_state['values']['message'] .= "\n\n" . t('Subscribed to newsletter.');
+    }
+    // Replace api_key and list_id with your own details
+    $api_key = variable_get('campaignmonitor_api_key', '');
+    $list_id = variable_get('campaignmonitor_list_id', '');
+    $email = $form_state['values']['mail'];
+    $name = $form_state['values']['name'];
+    _campaignmonitor_add_subscriber($api_key, $list_id, $name, $email);
+  }
+}
+
+/* END MODULE FUNCTIONS */
+
+/* TEMPLATE FUNCTIONS */
+
+/**
+ * Block template preprocessor
+ */
+function template_preprocess_campaignmonitor_block_content(&$variables) {
+  $variables['form'] = drupal_get_form('campaignmonitor_general_form');
+  if (user_access('access archive')) {
+    $variables['archive_link'] =  l('Newsletter Archive', 'newsletter_archive');
+  }
+  else {
+    $variables['archive_link'] = '';
+  }
+}
+
+/* END TEMPLATE FUNCTIONS */
+
+/* CUSTOM MODULE HOOKS */
+
+/**
+ * Get the available field keys
+ */
+function campaignmonitor_get_field_keys() {
+  return module_invoke_all('campaignmonitor_field_keys');
+}
+
+/**
+ * Get all the potential merge var values for a given user
+ */
+function campaignmonitor_get_field_key_values($uid) {
+  if ($user = user_load(array('uid' => $uid))) {
+    return module_invoke_all('campaignmonitor_field_key_values', $user);
+  }
+  return array();
+}
+
+/* END CUSTOM MODULE HOOKS */
+
+/* IMPLEMENTATION OF CUSTOM MODULE HOOKS */
+
+/**
+ * Implementation of hook_campaignmonitor_field_keys
+ */
+function campaignmonitor_campaignmonitor_field_keys() {
+  $out = array(0 => '<none>');
+  
+  $user_fields = array(
+      'name'      => t('Username'),
+      'mail'      => t('Email Address'),
+      'uid'       => t('User ID'),
+      'signature' => t("User's Signature"),
+      'created'   => t("User's Creation Date"),
+      'access'    => t("User's Last Access Date"),
+  );
+
+  foreach ($user_fields as $key => $field) {
+    $out[$key] = t('User: !field', array('!field' => $field));
+  }
+
+  if (function_exists('_profile_get_fields')) {
+    $categories = profile_categories();
+    if (!empty($categories)) {
+      foreach ($categories as $category) {
+        $result = _profile_get_fields($category['name'], $register);
+        while ($field = db_fetch_object($result)) {
+          $out[$field->name] = t('Profile: !cat - !field', array('!cat' => $field->category, '!field' => $field->title));
+        }
+      }
+    }
+  }
+
+  if (function_exists('token_get_list')) {
+    $tokens = token_get_list(array('user', 'order'));
+    if (is_array($tokens['user'])) {
+      foreach ($tokens['user'] as $token => $name) {
+        $out['token_'. $token] = t('Token: !field', array('!field' => $name));
+      }
+    }
+  }
+
+  return $out;
+}
+
+/**
+ * Implementation of hook_campaignmonitor_field_key_values
+ */
+function campaignmonitor_campaignmonitor_field_key_values($user) {
+  $out = array();
+  $out = (array)$user;
+  foreach ((array)$user as $key => $value) {
+    if (is_array($value) && $key != 'role') {
+      $out[$key] = implode('/', $value);
+    }
+    elseif (in_array($key, array('login', 'access', 'created'))) {
+      $out[$key] = date('c', $value);
+    }
+    elseif ($key != 'roles') {
+      $out[$key] = $value;
+    }
+  }
+  $out = array_merge($out, _campaignmonitor_get_user_tokens($user));
+  return $out;
+}
+
+/**
+ * Get the user tokens for merging
+ */
+function _campaignmonitor_get_user_tokens($user) {
+  $out = array();
+  if (function_exists('token_get_values')) {
+    $vars = token_get_values('user', $user);
+    foreach ($vars->tokens as $key => $value) {
+      $out['token_'. $value] = $vars->values[$key];
+    }
+  }
+  return $out;
+}
+
+/* END IMPLEMENTATION OF CUSTOM MODULE HOOKS */
+
+/* SOAP CALLS AND HELPERS */
+
+function _campaignmonitor_is_subscribed($api_key, $list_id, $email, $show_errors = FALSE) {
+  $retval = FALSE;
+  $cm = new CampaignMonitor($api_key, $client_id, $campaign_id, $list_id );
+  
+  $result = $cm->subscribersGetIsSubscribed($email, $list_id);
+
+  if ($result['anyType']['Code'] != 0) {
+    watchdog('campaignmonitor', 'Is subscribed: Code - %code, Message - %message', 
+            array('%code' => $result['anyType']['Code'], '%message' => $result['anyType']['Message']), WATCHDOG_ERROR);
+    $retval = FALSE;
+    if ($show_errors) {
+      drupal_set_message(t("There is an error with the newsletter server. Please try again later."), 'error');
+    }
+  } 
+  else if ($result['anyType'] == 'False') {
+    $retval = FALSE;
+  }
+  else if ($result['anyType'] == 'True') {
+    $retval = TRUE;
+  }
+  return $retval;
+}
+
+function _campaignmonitor_add_subscriber($api_key, $list_id, $name, $email, $show_errors = FALSE) {
+  $cm = new CampaignMonitor($api_key, $client_id, $campaign_id, $list_id );
+
+  $result = $cm->subscriberAddAndResubscribe($email, $name);
+  if ($result['anyType']['Code'] != 0) {
+    watchdog('campaignmonitor', 'Add and Resubscribe: Code - %code, Message - %message', 
+            array('%code' => $result['anyType']['Code'], '%message' => $result['anyType']['Message']), WATCHDOG_ERROR);
+    drupal_set_message(t("There was an error joining to newsletter."), 'error');
+  }
+  else {
+    drupal_set_message(t("You have successfully been added."), 'status');
+  }
+}
+
+function _campaignmonitor_remove_subscriber($api_key, $list_id, $email, $show_errors = FALSE) {
+  $cm = new CampaignMonitor($api_key, $client_id, $campaign_id, $list_id );
+
+  $result = $cm->subscriberUnsubscribe($email);
+  if ($result['Result']['Code'] == 0) {
+    drupal_set_message(t("You have successfully been unsubscribed."), 'status');
+  }
+  else {
+    watchdog('campaignmonitor', 'Remove Subscriber: Code - %code, Message - %message', 
+            array('%code' => $result['anyType']['Code'], '%message' => $result['anyType']['Message']), WATCHDOG_ERROR);
+    drupal_set_message(t("There was an error unsubscribing from newsletter."), 'error');
+  }
+}
+
+function _campaignmonitor_get_subscriber($api_key, $list_id, $email, $show_errors = FALSE) {
+  $retval = array("name" => '', "email" => $email);
+  $cm = new CampaignMonitor($api_key, $client_id, $campaign_id, $list_id );
+
+  $result = $cm->subscriberGetSingleSubscriber($list_id, $email);
+
+  if ($result['anyType']['Code'] != 0) {
+    watchdog('campaignmonitor', 'Get Subscriber: Code - %code, Message - %message', 
+            array('%code' => $result['anyType']['Code'], '%message' => $result['anyType']['Message']), WATCHDOG_ERROR);
+    if ($show_errors) {
+      drupal_set_message(t("There is an error with the newsletter server. Please try again later."), 'error');
+    }
+  }
+  else {
+    $retval['name'] = $result['anyType']['Name'];
+  }
+  return $retval;
+}
+
+function _campaignmonitor_check_details($api_key, $client_id, $list_id) {
+	$cm = new CampaignMonitor($api_key, $client_id, $campaign_id, $list_id );
+	$result = $cm->listGetDetail( $list_id );
+	
+	if ($result['anyType']['Code'] != 0) {
+		return FALSE;
+	}
+	
+	$result = $cm->clientGetDetail( $client_id );
+	if ($result['anyType']['Code'] != 0) {
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+/* END SOAP CALLS AND HELPERS */

@@ -1,0 +1,26 @@
+<?php
+// $Id: campaignmonitor.install,v 1.2.2.6 2009/06/26 07:37:33 ssherriff Exp $
+
+/**
+ * @file
+ * Install file for the Campaign Monitor module
+ *
+ * Removes all variables used by the module and clears
+ * the cache.
+ */
+
+function campaignmonitor_uninstall() {
+  variable_del('campaignmonitor_userpagedisplaytext');
+  variable_del('campaignmonitor_checkboxdisplaytext');
+  variable_del('campaignmonitor_client_id');
+  variable_del('campaignmonitor_list_id');
+  variable_del('campaignmonitor_display_on');
+  variable_del('campaignmonitor_api_key');
+  variable_del('campaignmonitor_pastcampaignurl');
+  variable_del('campaignmonitor_connection_timeout');
+  
+  cache_clear_all('*', 'cache', TRUE);
+  cache_clear_all('*', 'cache_filter', TRUE);
+  cache_clear_all('*', 'cache_menu', TRUE);
+  cache_clear_all('*', 'cache_page', TRUE);
+}

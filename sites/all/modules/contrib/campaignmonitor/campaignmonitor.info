@@ -1,0 +1,11 @@
+; $Id: campaignmonitor.info,v 1.2.2.2 2008/12/20 05:25:36 ssherriff Exp $
+name = Campaign Monitor
+description = "This module uses the Campaign Monitor API to add newsletter checkboxes to each form you like, plus allow people to subscribe, unsubscribe and view past campaigns."
+core = 6.x
+php = 5.0
+; Information added by drupal.org packaging script on 2009-11-08
+version = "6.x-2.4"
+core = "6.x"
+project = "campaignmonitor"
+datestamp = "1257658213"
+
