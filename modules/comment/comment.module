@@ -1,5 +1,4 @@
 <?php
-// $Id: comment.module,v 1.617.2.16 2010/05/28 16:23:15 goba Exp $
 
 /**
  * @file
@@ -663,7 +662,7 @@ function comment_access($op, $comment) {
   global $user;
 
   if ($op == 'edit') {
-    return ($user->uid && $user->uid == $comment->uid && comment_num_replies($comment->cid) == 0) || user_access('administer comments');
+    return ($user->uid && $user->uid == $comment->uid && comment_num_replies($comment->cid) == 0 && $comment->status == COMMENT_PUBLISHED) || user_access('administer comments');
   }
 }
 
