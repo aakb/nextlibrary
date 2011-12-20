@@ -1,0 +1,17 @@
+; $Id: nextlibrary.info,v 1.1.2.3 2009/06/05 17:52:14 dvessel Exp $
+
+name = Next Library 2013
+description = Theme for the Next Library 2013 website.
+screenshot = images/screenshot.png
+core = 6.x
+engine = phptemplate
+base theme = ninesixty
+
+; Theme specific styles. Any sub-themes should override this.
+stylesheets[all][] = css/nextlibrary.css
+
+; Information added by drupal.org packaging script on 2009-08-02
+version = "6.x-1.0"
+core = "6.x"
+project = "Next Library 2013"
+datestamp = "1249223138"
