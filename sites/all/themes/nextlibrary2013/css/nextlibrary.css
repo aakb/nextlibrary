@@ -38,19 +38,15 @@ p, dl, hr, h1, h2, h3, h4, h5, h6, ol, ul, pre, table, address, fieldset {
   Generel elements
 */
 
-#site-header,
-#site-subheader {
+#site-header {
   float: left;
   margin: 0;
   padding: 0;
-}
-
-#site-header {
   width: 200px;  
 }
 
 #site-subheader {
-  width: 740px;
+  position: relative;
 }
 
 #block-menu-primary-links {
@@ -58,7 +54,10 @@ p, dl, hr, h1, h2, h3, h4, h5, h6, ol, ul, pre, table, address, fieldset {
   letter-spacing: -1px;
   height: 107px;
   margin: 0;
+  position: absolute;
+  right: 0;
   text-transform: lowercase;
+  top: 0;
 }
 
 #block-menu-primary-links ul {

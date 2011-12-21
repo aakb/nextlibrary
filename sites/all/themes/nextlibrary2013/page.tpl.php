@@ -39,7 +39,7 @@
     </div>
 
 
-    <div id="site-subheader" class="prefix-1 suffix-1 clear-block">
+    <div id="site-subheader" class="clear-block">
     <?php if ($mission): ?>
       <div id="mission" class="<?php print ns('grid-12', $header, 7); ?>">
         <?php print $mission; ?>
