@@ -17,7 +17,7 @@
 
     <div id="site-header" class="clear-block">
     <?php if ($linked_logo_img): ?>
-      <span id="logo" class="grid-1 alpha"><?php print $linked_logo_img; ?></span>
+      <span id="logo" class="alpha"><?php print $linked_logo_img; ?></span>
     <?php endif; ?>
     <?php if ($linked_site_name): ?>
       <h1 id="site-name" class="grid-3 omega"><?php print $linked_site_name; ?></h1>
@@ -39,7 +39,6 @@
     </div>
 
 
-    <div id="site-subheader" class="clear-block">
     <?php if ($mission): ?>
       <div id="mission" class="<?php print ns('grid-12', $header, 7); ?>">
         <?php print $mission; ?>
@@ -51,7 +50,6 @@
         <?php print $header; ?>
       </div>
     <?php endif; ?>
-    </div>
 
 
     <div id="main" class="column <?php print ns('grid-16', $left, 4, $right, 3) . ' ' . ns('push-4', !$left, 4); ?>">
